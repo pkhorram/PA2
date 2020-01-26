@@ -240,20 +240,27 @@ class Neuralnetwork():
         Compute forward pass through all the layers in the network and return it.
         If targets are provided, return loss as well.
         """
-        raise NotImplementedError("Forward not implemented for NeuralNetwork")
+        for layer in self.layers:
+            x = layer(x)
+        if targets:
+            return x, self.loss(x, targets)
+        return x
 
     def loss(self, logits, targets):
         '''
         compute the categorical cross-entropy loss and return it.
+        assumes softmax probability distribution stored in logits 
         '''
-        raise NotImplementedError("Loss not implemented for NeuralNetwork")
+        return -np.dot(targets, np.log(logits))
 
     def backward(self):
         '''
         Implement backpropagation here.
         Call backward methods of individual layer's.
         '''
-        raise NotImplementedError("Backprop not implemented for NeuralNetwork")
+        delta = np.zeros((config['layer_specs'][-2],))
+        for i in range(len(self.layers)-1, -1, -1):
+            delta = self.layers[i].backward(delta)
 
 
 def train(model, x_train, y_train, x_valid, y_valid, config):
