@@ -165,8 +165,8 @@ class Layer():
         Define the architecture and create placeholder.
         """
         np.random.seed(42)
-        self.w = None    # Declare the Weight matrix
-        self.b = None    # Create a placeholder for Bias
+        self.w = np.random.randn(out_units, in_units) * np.sqrt(1 / in_units)    # Declare the Weight matrix
+        self.b = np.zeros(out_units, 1)    # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
 
@@ -186,7 +186,10 @@ class Layer():
         Do not apply activation here.
         Return self.a
         """
-        raise NotImplementedError("Layer forward pass not implemented.")
+        self.x = x
+        self.a = np.dot(self.w, x) + self.b
+        return self.a
+        #raise NotImplementedError("Layer forward pass not implemented.")
 
     def backward(self, delta):
         """
@@ -194,7 +197,11 @@ class Layer():
         computes gradient for its weights and the delta to pass to its previous layers.
         Return self.dx
         """
-        raise NotImplementedError("Backprop for Layer not implemented.")
+        self.d_w = np.dot(delta, self.x.T)
+        self.d_b = delta
+        self.d_x = np.dot(self.w.T, delta)
+        return self.d_x
+        #raise NotImplementedError("Backprop for Layer not implemented.")
 
 
 class Neuralnetwork():
