@@ -129,40 +129,25 @@ class Activation():
         return grad * delta
 
     def sigmoid(self, x):
-        """
-        Implement the sigmoid activation here.
-        """
-        raise NotImplementedError("Sigmoid not implemented")
+        sigmoid = 1/(1+ exp(-x))
+        return sigmoid
 
     def tanh(self, x):
-        """
-        Implement tanh here.
-        """
-        raise NotImplementedError("Tanh not implemented")
+        tanh_func = (np.exp(x) - np.exp(-x))/(np.exp(x) + np.exp(-x))
+        return tanh_func
 
     def ReLU(self, x):
-        """
-        Implement ReLU here.
-        """
-        raise NotImplementedError("ReLu not implemented")
+        return x * (x > 0)
+        
+    
+    def grad_sigmoid(self, x):
+        return sigmoid(x)*(1 - sigmoid(x))
 
-    def grad_sigmoid(self):
-        """
-        Compute the gradient for sigmoid here.
-        """
-        raise NotImplementedError("Sigmoid gradient not implemented")
+    def grad_tanh(self, x):
+        return 1 - tanh(x)**2 
 
-    def grad_tanh(self):
-        """
-        Compute the gradient for tanh here.
-        """
-        raise NotImplementedError("tanh gradient not implemented")
-
-    def grad_ReLU(self):
-        """
-        Compute the gradient for ReLU here.
-        """
-        raise NotImplementedError("ReLU gradient not implemented")
+    def grad_ReLU(self, x):
+        return 1 * ( x > 0)
 
 
 class Layer():
