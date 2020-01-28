@@ -68,7 +68,9 @@ def softmax(x):
     Implement the softmax function here.
     Remember to take care of the overflow condition.
     """
-    raise NotImplementedError("Softmax not implemented")
+    avg = np.average(x)
+    x1 = np.zeros(x.shape) - avg
+    return np.exp(x1) / np.sum(np.exp(x1))
 
 
 class Activation():
@@ -104,6 +106,7 @@ class Activation():
         """
         Compute the forward pass.
         """
+        self.x = a
         if self.activation_type == "sigmoid":
             return self.sigmoid(a)
 
@@ -118,18 +121,18 @@ class Activation():
         Compute the backward pass.
         """
         if self.activation_type == "sigmoid":
-            grad = self.grad_sigmoid()
+            grad = self.grad_sigmoid(self.x)
 
         elif self.activation_type == "tanh":
-            grad = self.grad_tanh()
+            grad = self.grad_tanh(self.x)
 
         elif self.activation_type == "ReLU":
-            grad = self.grad_ReLU()
+            grad = self.grad_ReLU(self.x)
 
         return grad * delta
 
     def sigmoid(self, x):
-        sigmoid = 1/(1+ exp(-x))
+        sigmoid = 1/(1+ np.exp(-x))
         return sigmoid
 
     def tanh(self, x):
@@ -138,13 +141,13 @@ class Activation():
 
     def ReLU(self, x):
         return x * (x > 0)
-        
+
     
     def grad_sigmoid(self, x):
-        return sigmoid(x)*(1 - sigmoid(x))
+        return self.sigmoid(x)*(1 - self.sigmoid(x))
 
     def grad_tanh(self, x):
-        return 1 - tanh(x)**2 
+        return 1 - self.tanh(x)**2 
 
     def grad_ReLU(self, x):
         return 1 * ( x > 0)
@@ -166,7 +169,7 @@ class Layer():
         """
         np.random.seed(42)
         self.w = np.random.randn(out_units, in_units) * np.sqrt(1 / in_units)    # Declare the Weight matrix
-        self.b = np.zeros(out_units, 1)    # Create a placeholder for Bias
+        self.b = np.zeros((out_units, 1))   # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
 
@@ -235,30 +238,39 @@ class Neuralnetwork():
         """
         return self.forward(x, targets)
 
-    def forward(self, x, targets=None):
+    def forward(self, x, targets):
         """
         Compute forward pass through all the layers in the network and return it.
         If targets are provided, return loss as well.
         """
+        self.targets = targets
+        
         for layer in self.layers:
             x = layer(x)
-        if targets:
+
+        x = softmax(x)
+        self.y = x
+
+        if targets is not None:
             return x, self.loss(x, targets)
         return x
 
-    def loss(self, logits, targets):
+    def loss(self, outputs, targets):
         '''
         compute the categorical cross-entropy loss and return it.
         assumes softmax probability distribution stored in logits 
         '''
-        return -np.dot(targets, np.log(logits))
+        return -np.dot(targets.T, np.log(outputs))
 
     def backward(self):
         '''
         Implement backpropagation here.
         Call backward methods of individual layer's.
         '''
-        delta = np.zeros((config['layer_specs'][-2],))
+
+        # delta = np.zeros((config['layer_specs'][-2],))
+        delta = self.y - self.targets
+        print('delta shape: ', delta.shape)
         for i in range(len(self.layers)-1, -1, -1):
             delta = self.layers[i].backward(delta)
 
