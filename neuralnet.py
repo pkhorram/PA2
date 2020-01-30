@@ -204,7 +204,7 @@ class Layer():
         Return self.dx
         """
         self.d_w = np.dot(delta, self.x.T) + (config['L2_penalty']) * self.w
-        self.d_b = delta + + (config['L2_penalty']) * self.b
+        self.d_b = delta + (config['L2_penalty']) * self.b
         self.d_x = np.dot(self.w.T, delta)
         self.v_w = (config['momentum_gamma']) * self.v_w + (1 - config['momentum_gamma']) * self.d_w
         self.v_b = (config['momentum_gamma']) * self.v_b + (1 - config['momentum_gamma']) * self.d_b
