@@ -172,6 +172,9 @@ class Layer():
         self.b = np.zeros((out_units, 1))   # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
+        
+        self.v_w = np.zeros(out_units, in_units)
+        self.v_b = np.zeros(out_units, 1)
 
         self.d_x = None  # Save the gradient w.r.t x in this
         self.d_w = None  # Save the gradient w.r.t w in this
@@ -200,9 +203,19 @@ class Layer():
         computes gradient for its weights and the delta to pass to its previous layers.
         Return self.dx
         """
-        self.d_w = np.dot(delta, self.x.T)
-        self.d_b = delta
+        self.d_w = np.dot(delta, self.x.T) + (config['L2_penalty']) * self.w
+        self.d_b = delta + + (config['L2_penalty']) * self.b
         self.d_x = np.dot(self.w.T, delta)
+        self.v_w = (config['momentum_gamma']) * self.v_w + (1 - config['momentum_gamma']) * self.d_w
+        self.v_b = (config['momentum_gamma']) * self.v_b + (1 - config['momentum_gamma']) * self.d_b
+        """
+        if config['momentum']:
+            self.w = self.w - (config['learning_rate']) * self.v_w 
+            self.b = self.b - (config['learning_rate']) * self.v_b
+        else:
+            self.w = self.w - (config['learning_rate']) * self.d_w
+            self.b = self.b - (config['learning_rate']) * self.d_b
+        """
         return self.d_x
         #raise NotImplementedError("Backprop for Layer not implemented.")
 
