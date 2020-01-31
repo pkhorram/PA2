@@ -134,7 +134,7 @@ class Activation():
         elif self.activation_type == "ReLU":
             return self.ReLU(a)
 
-    def backward(self, delta, momuntum, penalty):
+    def backward(self, delta):
         """
         Compute the backward pass.
         """
@@ -187,7 +187,7 @@ class Layer():
         """
         np.random.seed(42)
         self.w = np.random.randn(out_units, in_units) * np.sqrt(1 / in_units)    # Declare the Weight matrix
-        self.b = np.zeros((out_units, 1))   # Create a placeholder for Bias
+        self.b = np.zeros((out_units))   # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
         
@@ -313,15 +313,15 @@ class Neuralnetwork():
         '''
 
         # delta = np.zeros((config['layer_specs'][-2],))
-        error = loss(self.y, self.targets)
+        error = self.loss(self.y, self.targets)
         #delta = self.y - self.targets
         #delta1 = - self.targets / self.y #check broadcast
         delta = self.targets - self.y
         for i in range(len(self.layers)-1, -1, -1):
-            if isinstance(model.layers[i], Activation):
+            if isinstance(self.layers[i], Activation):
                 delta = self.layers[i].backward(delta)
             else:
-                delta = self.layers[i].backwards(delta, self.momentum, self.momentum_gamma, self.penalty, self.learing_rate)
+                delta = self.layers[i].backwards(delta, self.momentum, self.momentum_gamma, self.penalty, self.learning_rate)
             
             
 
