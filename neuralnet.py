@@ -17,6 +17,7 @@ import yaml
 import numpy as np
 
 
+
 def load_config(path):
     """
     Load the configuration from config.yaml.
@@ -116,7 +117,7 @@ class Activation():
         elif self.activation_type == "ReLU":
             return self.ReLU(a)
 
-    def backward(self, delta):
+    def backward(self, delta, momuntum, penalty):
         """
         Compute the backward pass.
         """
@@ -173,12 +174,16 @@ class Layer():
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
         
-        self.v_w = np.zeros(out_units, in_units)
-        self.v_b = np.zeros(out_units, 1)
+        self.v_w = np.zeros((out_units, in_units))
+        self.v_b = np.zeros((out_units, 1))
 
         self.d_x = None  # Save the gradient w.r.t x in this
-        self.d_w = None  # Save the gradient w.r.t w in this
+        self.d_w = None  # Save the gradient w.r.t w in thisc
         self.d_b = None  # Save the gradient w.r.t b in this
+        
+        self.momuntum = None
+        self.penalty = None
+        
 
     def __call__(self, x):
         """
@@ -193,29 +198,30 @@ class Layer():
         Return self.a
         """
         self.x = x
-        self.a = np.dot(self.w, x) + self.b
+        self.a = np.dot(self.w, self.x) + self.b
         return self.a
         #raise NotImplementedError("Layer forward pass not implemented.")
 
-    def backward(self, delta):
+    def backward(self, delta, momuntum, penalty):
         """
         Write the code for backward pass. This takes in gradient from its next layer as input,
         computes gradient for its weights and the delta to pass to its previous layers.
         Return self.dx
         """
-        self.d_w = np.dot(delta, self.x.T) + (config['L2_penalty']) * self.w
-        self.d_b = delta + + (config['L2_penalty']) * self.b
+        
+        self.d_w = np.dot(delta, self.x.T) + (penalty) * self.w
+        self.d_b = delta + + (penalty) * self.b
         self.d_x = np.dot(self.w.T, delta)
-        self.v_w = (config['momentum_gamma']) * self.v_w + (1 - config['momentum_gamma']) * self.d_w
-        self.v_b = (config['momentum_gamma']) * self.v_b + (1 - config['momentum_gamma']) * self.d_b
-        """
+        self.v_w = (momuntum) * self.v_w + (1 - momuntum) * self.d_w
+        self.v_b = (momuntum) * self.v_b + (1 - momuntum) * self.d_b
+        '''
         if config['momentum']:
             self.w = self.w - (config['learning_rate']) * self.v_w 
             self.b = self.b - (config['learning_rate']) * self.v_b
         else:
             self.w = self.w - (config['learning_rate']) * self.d_w
             self.b = self.b - (config['learning_rate']) * self.d_b
-        """
+        '''
         return self.d_x
         #raise NotImplementedError("Backprop for Layer not implemented.")
 
@@ -244,6 +250,9 @@ class Neuralnetwork():
             self.layers.append(Layer(config['layer_specs'][i], config['layer_specs'][i+1]))
             if i < len(config['layer_specs']) - 2:
                 self.layers.append(Activation(config['activation']))
+         
+        self.momentum = config['momentum']
+        self.penalty = config['L2_penalty']
 
     def __call__(self, x, targets=None):
         """
@@ -273,7 +282,11 @@ class Neuralnetwork():
         compute the categorical cross-entropy loss and return it.
         assumes softmax probability distribution stored in logits 
         '''
-        return -np.dot(targets.T, np.log(outputs))
+        error = 0
+        for i in range(outputs.shape[0]):
+            error = error + np.dot(np.log(outputs[i,:]),targets[i,:])
+        error = -error/(outputs.shape[0]*outputs.shape[1])
+        return error
 
     def backward(self):
         '''
@@ -283,9 +296,9 @@ class Neuralnetwork():
 
         # delta = np.zeros((config['layer_specs'][-2],))
         delta = self.y - self.targets
-        print('delta shape: ', delta.shape)
+       
         for i in range(len(self.layers)-1, -1, -1):
-            delta = self.layers[i].backward(delta)
+            delta = self.layers[i].backward(delta, self.momentum, self.penalty)
 
 
 def train(model, x_train, y_train, x_valid, y_valid, config):
@@ -295,8 +308,22 @@ def train(model, x_train, y_train, x_valid, y_valid, config):
     Implement Early Stopping.
     Use config to set parameters for training like learning rate, momentum, etc.
     """
+    B = 100
+    N = train_images.shape[0]
+    num_epoch = 50
 
-    raise NotImplementedError("Train method not implemented")
+    for epoch in range(num_epoch):
+
+        indeces = np.random.permutation(np.arange(N))
+
+        for i in range(int(N/B)):
+
+            xtrain = train_images[indeces[B*i:B*(i+1)],:]
+            ytrain = train_labels[indeces[B*i:B*(i+1)],:]
+            forwarded, loss = model.forward(xtrain.T, ytrain.T)
+            model.backward()
+
+        
 
 
 def test(model, X_test, y_test):
