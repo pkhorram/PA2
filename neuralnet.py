@@ -74,6 +74,23 @@ def softmax(x):
     return np.exp(x1) / np.sum(np.exp(x1))
 
 
+def softmaxp(predicted):
+    
+    n = predicted.shape[1]
+    matrix = np.zeros((n,n))
+    for i in range(n):
+        for j in range(n):
+            if i == j:
+                matrix[i,j] = predicted[i]*(1 - predicted[j])
+            else:
+                matrix[i,j] = -predicted[i]*predicted[j]
+    return matrix
+                
+    
+
+
+
+
 class Activation():
     """
     The class implements different types of activation functions for
@@ -181,9 +198,6 @@ class Layer():
         self.d_w = None  # Save the gradient w.r.t w in thisc
         self.d_b = None  # Save the gradient w.r.t b in this
         
-        self.momuntum = None
-        self.penalty = None
-        
 
     def __call__(self, x):
         """
@@ -202,31 +216,28 @@ class Layer():
         return self.a
         #raise NotImplementedError("Layer forward pass not implemented.")
 
-    def backward(self, delta, momuntum, penalty):
+    def backwards(self, delta, momentum, momentum_gamma, penalty, learning_rate):
         """
         Write the code for backward pass. This takes in gradient from its next layer as input,
         computes gradient for its weights and the delta to pass to its previous layers.
         Return self.dx
         """
-<<<<<<< HEAD
+
         
         self.d_w = np.dot(delta, self.x.T) + (penalty) * self.w
-        self.d_b = delta + + (penalty) * self.b
-=======
-        self.d_w = np.dot(delta, self.x.T) + (config['L2_penalty']) * self.w
-        self.d_b = delta + (config['L2_penalty']) * self.b
->>>>>>> 6f59c64a333f8ea95def87c099a36e64168cf6af
+        self.d_b = delta + (penalty) * self.b
+
         self.d_x = np.dot(self.w.T, delta)
-        self.v_w = (momuntum) * self.v_w + (1 - momuntum) * self.d_w
-        self.v_b = (momuntum) * self.v_b + (1 - momuntum) * self.d_b
-        '''
-        if config['momentum']:
-            self.w = self.w - (config['learning_rate']) * self.v_w 
-            self.b = self.b - (config['learning_rate']) * self.v_b
+        self.v_w = (momentum_gamma) * self.v_w + (1 - momentum_gamma) * self.d_w
+        self.v_b = (momentum_gamma) * self.v_b + (1 - momentum_gamma) * self.d_b
+        
+        if momentum:
+            self.w = self.w - (learning_rate) * self.v_w 
+            self.b = self.b - (learning_rate) * self.v_b
         else:
-            self.w = self.w - (config['learning_rate']) * self.d_w
-            self.b = self.b - (config['learning_rate']) * self.d_b
-        '''
+            self.w = self.w - (learning_rate) * self.d_w
+            self.b = self.b - (learning_rate) * self.d_b
+        
         return self.d_x
         #raise NotImplementedError("Backprop for Layer not implemented.")
 
@@ -258,6 +269,8 @@ class Neuralnetwork():
          
         self.momentum = config['momentum']
         self.penalty = config['L2_penalty']
+        self.momentum_gamma = config['momentum_gamma']
+        self.learning_rate = config['learning_rate']
 
     def __call__(self, x, targets=None):
         """
@@ -300,10 +313,17 @@ class Neuralnetwork():
         '''
 
         # delta = np.zeros((config['layer_specs'][-2],))
-        delta = self.y - self.targets
-       
+        error = loss(self.y, self.targets)
+        #delta = self.y - self.targets
+        delta1 = - self.targets / self.y #check broadcast
+        delta = softmaxp(self.y, delta1)
         for i in range(len(self.layers)-1, -1, -1):
-            delta = self.layers[i].backward(delta, self.momentum, self.penalty)
+            if isinstance(model.layers[i], Activation):
+                delta = self.layers[i].backward(delta)
+            else:
+                delta = self.layers[i].backwards(delta, self.momentum, self.momentum_gamma, self.penalty, self.learing_rate)
+            
+            
 
 
 def train(model, x_train, y_train, x_valid, y_valid, config):
