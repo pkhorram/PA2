@@ -315,8 +315,8 @@ class Neuralnetwork():
         # delta = np.zeros((config['layer_specs'][-2],))
         error = loss(self.y, self.targets)
         #delta = self.y - self.targets
-        delta1 = - self.targets / self.y #check broadcast
-        delta = softmaxp(self.y, delta1)
+        #delta1 = - self.targets / self.y #check broadcast
+        delta = self.targets - self.y
         for i in range(len(self.layers)-1, -1, -1):
             if isinstance(model.layers[i], Activation):
                 delta = self.layers[i].backward(delta)
