@@ -208,9 +208,14 @@ class Layer():
         computes gradient for its weights and the delta to pass to its previous layers.
         Return self.dx
         """
+<<<<<<< HEAD
         
         self.d_w = np.dot(delta, self.x.T) + (penalty) * self.w
         self.d_b = delta + + (penalty) * self.b
+=======
+        self.d_w = np.dot(delta, self.x.T) + (config['L2_penalty']) * self.w
+        self.d_b = delta + (config['L2_penalty']) * self.b
+>>>>>>> 6f59c64a333f8ea95def87c099a36e64168cf6af
         self.d_x = np.dot(self.w.T, delta)
         self.v_w = (momuntum) * self.v_w + (1 - momuntum) * self.d_w
         self.v_b = (momuntum) * self.v_b + (1 - momuntum) * self.d_b
