@@ -187,7 +187,7 @@ class Layer():
         """
         np.random.seed(42)
         self.w = np.random.randn(out_units, in_units) * np.sqrt(1 / in_units)    # Declare the Weight matrix
-        self.b = np.zeros((out_units))   # Create a placeholder for Bias
+        self.b = np.zeros((out_units, 1))   # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
         
