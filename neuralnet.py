@@ -69,9 +69,14 @@ def softmax(x):
     Implement the softmax function here.
     Remember to take care of the overflow condition.
     """
-    avg = np.average(x)
-    x1 = np.zeros(x.shape) - avg
-    return np.exp(x1) / np.sum(np.exp(x1))
+    ans = np.zeros(x.shape)
+    for i in range(x.shape[1]):
+        temp = x[:,i]
+        avg = np.average(temp)
+        x1 = np.zeros(temp.shape) + temp - avg
+        ans[:, i] = np.exp(x1) / np.sum(np.exp(x1))
+        
+    return ans
 
 
 def softmaxp(predicted):
@@ -286,14 +291,21 @@ class Neuralnetwork():
         self.targets = targets
         
         for layer in self.layers:
+            # print('init x shape: ', x.shape)
             x = layer(x)
+            # if isinstance(layer, Layer):
+                # print('layer: ', x.shape, layer.w.shape, layer.b.shape)
+            # elif isinstance(layer, Activation):
+                # print('Activation: ', x.shape, layer.activation_type)
 
+        # print('inforward: ', x.shape)
         x = softmax(x)
         self.y = x
+        # print('iny: ', np.sum(self.y), self.y.shape)
 
         if targets is not None:
-            return x, self.loss(x, targets)
-        return x
+            return self.y, self.loss(x, targets)
+        return self.y
 
     def loss(self, outputs, targets):
         '''
@@ -316,7 +328,7 @@ class Neuralnetwork():
         error = self.loss(self.y, self.targets)
         #delta = self.y - self.targets
         #delta1 = - self.targets / self.y #check broadcast
-        delta = self.targets - self.y
+        delta = -self.targets + self.y
         for i in range(len(self.layers)-1, -1, -1):
             if isinstance(self.layers[i], Activation):
                 delta = self.layers[i].backward(delta)
