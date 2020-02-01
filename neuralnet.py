@@ -15,6 +15,7 @@
 import os, gzip
 import yaml
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 
@@ -92,7 +93,13 @@ def softmaxp(predicted):
     return matrix
                 
     
-
+def accuracy(outputs, targets):
+    targets = targets.T
+    out_ind = np.argmax(outputs, axis = 0)
+    tar_ind = np.argmax(targets, axis = 0)
+        
+    acc = sum(out_ind == tar_ind)/outputs.shape[1]
+    return acc
 
 
 
@@ -191,7 +198,7 @@ class Layer():
         Define the architecture and create placeholder.
         """
         np.random.seed(42)
-        self.w = np.random.randn(out_units, in_units) * np.sqrt(1 / in_units)    # Declare the Weight matrix
+        self.w = np.random.randn(out_units, in_units) #* np.sqrt(1 / in_units)    # Declare the Weight matrix
         self.b = np.zeros((out_units, 1))   # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
@@ -317,6 +324,9 @@ class Neuralnetwork():
             error = error + np.dot(np.log(outputs[i,:]),targets[i,:])
         error = -error/(outputs.shape[0]*outputs.shape[1])
         return error
+    
+    
+        
 
     def backward(self):
         '''
@@ -328,7 +338,7 @@ class Neuralnetwork():
         error = self.loss(self.y, self.targets)
         #delta = self.y - self.targets
         #delta1 = - self.targets / self.y #check broadcast
-        delta = -self.targets + self.y
+        delta = - self.targets + self.y
         for i in range(len(self.layers)-1, -1, -1):
             if isinstance(self.layers[i], Activation):
                 delta = self.layers[i].backward(delta)
@@ -346,8 +356,18 @@ def train(model, x_train, y_train, x_valid, y_valid, config):
     Use config to set parameters for training like learning rate, momentum, etc.
     """
     B = 100
-    N = train_images.shape[0]
-    num_epoch = 50
+    N = x_train.shape[0]
+    num_epoch = 100
+
+ 
+    # This dictionary strores the best parameters (Weights and Biases)
+    models = {'L1_w':[],
+             'L1_b':[],
+             'L2_w':[],
+             'L2_b':[]
+             }
+
+    val_l, train_l ,ind, train_acc, val_acc = [], [], [], [], []
 
     for epoch in range(num_epoch):
 
@@ -355,11 +375,55 @@ def train(model, x_train, y_train, x_valid, y_valid, config):
 
         for i in range(int(N/B)):
 
-            xtrain = train_images[indeces[B*i:B*(i+1)],:]
-            ytrain = train_labels[indeces[B*i:B*(i+1)],:]
-            forwarded, loss = model.forward(xtrain.T, ytrain.T)
+            xtrain = x_train[indeces[B*i:B*(i+1)],:]
+            ytrain = y_train[indeces[B*i:B*(i+1)],:]
+            train_forward, train_loss = model.forward(xtrain.T, ytrain.T)
+            train_accuracy = accuracy(train_forward, ytrain)
             model.backward()
 
+
+        val_forward, val_loss = model.forward(x_valid.T, y_valid.T)
+        val_accuracy = accuracy(val_forward, y_valid)
+        print('At Epoch', epoch, 'train_loss is: ', train_loss, 'val_loss is: ', val_loss)
+
+
+        val_l.append(val_loss)
+        train_l.append(train_loss)
+        ind.append(epoch)
+        train_acc.append(train_accuracy)
+        val_acc.append(val_accuracy)
+
+        # Storing the best loss and parameters 
+        if val_l[epoch] < val_l[epoch-1]:
+            models['L1_w'] = model.layers[0].w
+            models['L1_b'] = model.layers[0].b
+            models['L2_w'] = model.layers[2].w
+            models['L2_b'] = model.layers[2].b
+            
+
+            best_val_loss = val_l[epoch]
+            best_epoch = epoch
+
+    fig1 = plt.figure()        
+    plt.plot(ind, train_l,label = 'Train loss')
+    plt.plot(ind, val_l,label = 'Validation loss')
+    plt.title('Plot of Loss vs. Epoch for Batch Gradient Descent')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    
+    
+    fig2 = plt.figure()        
+    plt.plot(ind, train_acc, label = 'Train Accuracy')
+    plt.plot(ind, val_acc, label = 'Validation Accuracy')
+    plt.title('Plot of Accuracy vs. Epoch for Batch Gradient Descent')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+     
+
+    return best_val_loss, best_epoch, models
+    
         
 
 

@@ -1,8 +1,8 @@
 # This specifies the number of layers and number of hidden neurons in each layer.
-layer_specs: [784, 100, 100, 10]
+layer_specs: [784, 50, 10]
 
 # Type of non-linear activation function to be used for the layers.
-activation: "sigmoid"
+activation: "tanh"
 
 # The learning rate to be used for training.
 learning_rate: 0.005
@@ -20,7 +20,7 @@ early_stop: True
 early_stop_epoch: 5
 
 # Regularization constant
-L2_penalty: 0
+L2_penalty: 0.01
 
 # Use momentum for training
 momentum: True
