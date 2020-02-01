@@ -225,7 +225,7 @@ class Layer():
 
         
         self.d_w = np.dot(delta, self.x.T) + (penalty) * self.w
-        self.d_b = delta + (penalty) * self.b
+        self.d_b = np.sum(delta,axis=1,keepdims=True) + (penalty) * self.b
 
         self.d_x = np.dot(self.w.T, delta)
         self.v_w = (momentum_gamma) * self.v_w + (1 - momentum_gamma) * self.d_w
