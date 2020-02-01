@@ -101,13 +101,13 @@ def sanity_network(data, default_config):
     np.random.seed(42)
 
     # Random input for our network.
-    random_image = np.random.randn(1, 784)
+    random_image = np.random.randn(1, 784).T
 
     # Initialize the network using the default configuration
     nnet = neuralnet.Neuralnetwork(default_config)
 
     # Compute the forward pass.
-    nnet(random_image, targets = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0]))
+    nnet(random_image, targets = np.array([1, 0, 0, 0, 0, 0, 0, 0, 0, 0]).reshape(-1,1))
 
     # Compute the backward pass.
     nnet.backward()
@@ -116,10 +116,12 @@ def sanity_network(data, default_config):
     for layer_idx, layer in enumerate(nnet.layers):
         if isinstance(layer, neuralnet.Layer):
             layer_no += 1
-            error_x   = np.sum(np.abs(data['nnet'].layers[layer_idx].x   - layer.x))
-            error_w   = np.sum(np.abs(data['nnet'].layers[layer_idx].w   - layer.w))
+            print('layer w: ', layer.w.T)
+            print('data w: ', data['nnet'].layers[layer_idx].w)
+            error_x   = np.sum(np.abs(data['nnet'].layers[layer_idx].x   - layer.x.T))
+            error_w   = np.sum(np.abs(data['nnet'].layers[layer_idx].w   - layer.w.T))
             error_b   = np.sum(np.abs(data['nnet'].layers[layer_idx].b   - layer.b))
-            error_d_w = np.sum(np.abs(data['nnet'].layers[layer_idx].d_w - layer.d_w))
+            error_d_w = np.sum(np.abs(data['nnet'].layers[layer_idx].d_w - layer.d_w.T))
             error_d_b = np.sum(np.abs(data['nnet'].layers[layer_idx].d_b - layer.d_b))
 
             check_error(error_x,   f"Layer{layer_no}: Input")

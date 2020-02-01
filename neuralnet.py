@@ -191,7 +191,7 @@ class Layer():
         Define the architecture and create placeholder.
         """
         np.random.seed(42)
-        self.w = np.random.randn(out_units, in_units) * np.sqrt(1 / in_units)    # Declare the Weight matrix
+        self.w = np.random.randn(out_units, in_units) #* np.sqrt(1 / in_units)    # Declare the Weight matrix
         self.b = np.zeros((out_units, 1))   # Create a placeholder for Bias
         self.x = None    # Save the input to forward in this
         self.a = None    # Save the output of forward pass in this (without activation)
@@ -289,6 +289,7 @@ class Neuralnetwork():
         If targets are provided, return loss as well.
         """
         self.targets = targets
+        self.x = x
         
         for layer in self.layers:
             # print('init x shape: ', x.shape)
@@ -312,6 +313,8 @@ class Neuralnetwork():
         compute the categorical cross-entropy loss and return it.
         assumes softmax probability distribution stored in logits 
         '''
+        # print('outputs shape: ', outputs.shape)
+        # print('targets shape: ', targets.shape)
         error = 0
         for i in range(outputs.shape[0]):
             error = error + np.dot(np.log(outputs[i,:]),targets[i,:])
